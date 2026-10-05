@@ -3,9 +3,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client, S3_BUCKET_NAME, S3_PUBLIC_BASE_URL } from '../config/s3.js';
 
 export class S3Service {
-  /**
-   * Returns public URL for an asset in an open S3 bucket
-   */
+  
+   // Returns public URL for an asset in an open S3 bucket
   static getPublicUrl(key) {
     if (S3_PUBLIC_BASE_URL) {
       return `${S3_PUBLIC_BASE_URL.replace(/\/$/, '')}/${key}`;
@@ -14,9 +13,7 @@ export class S3Service {
     return `https://${S3_BUCKET_NAME}.s3.${region}.amazonaws.com/${key}`;
   }
 
-  /**
-   * Uploads file buffer / stream directly to S3
-   */
+   //Uploads file buffer / stream directly to S3
   static async uploadFile({ fileBuffer, key, contentType = 'application/octet-stream', acl = null }) {
     if (!S3_BUCKET_NAME) {
       throw new Error('S3_BUCKET_NAME is not configured.');
@@ -39,9 +36,8 @@ export class S3Service {
     return this.getPublicUrl(key);
   }
 
-  /**
-   * Generates a pre-signed URL for direct frontend uploads
-   */
+  
+   //Generates a pre-signed URL for direct frontend uploads
   static async getPresignedUploadUrl(key, contentType, expiresIn = 3600) {
     if (!S3_BUCKET_NAME) {
       throw new Error('S3_BUCKET_NAME is not configured.');
@@ -56,9 +52,8 @@ export class S3Service {
     return await getSignedUrl(s3Client, command, { expiresIn });
   }
 
-  /**
-   * Generates a pre-signed download URL for private assets
-   */
+  
+   //Generates a pre-signed download URL for private assets
   static async getPresignedDownloadUrl(key, expiresIn = 3600) {
     if (!S3_BUCKET_NAME) {
       throw new Error('S3_BUCKET_NAME is not configured.');
@@ -72,9 +67,8 @@ export class S3Service {
     return await getSignedUrl(s3Client, command, { expiresIn });
   }
 
-  /**
-   * Deletes an object from S3
-   */
+  
+   //Deletes an object from S3
   static async deleteFile(key) {
     if (!S3_BUCKET_NAME) {
       throw new Error('S3_BUCKET_NAME is not configured.');
