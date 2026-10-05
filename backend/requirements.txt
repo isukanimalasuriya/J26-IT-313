@@ -1,8 +1,7 @@
-﻿fastapi==0.141.1
-uvicorn==0.53.0
+# Python dependencies for Machine Learning Models & Processing Pipelines
 scikit-learn==1.6.1
-xgboost-cpu==3.2.0
+xgboost==2.1.4
 pandas==2.2.3
-numpy==2.2.6
-scipy==1.15.3
-joblib==1.5.2
+numpy==2.2.3
+scipy==1.15.2
+joblib==1.4.2
