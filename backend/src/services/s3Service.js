@@ -17,18 +17,23 @@ export class S3Service {
   /**
    * Uploads file buffer / stream directly to S3
    */
-  static async uploadFile({ fileBuffer, key, contentType = 'application/octet-stream', isPublic = true }) {
+  static async uploadFile({ fileBuffer, key, contentType = 'application/octet-stream', acl = null }) {
     if (!S3_BUCKET_NAME) {
       throw new Error('S3_BUCKET_NAME is not configured.');
     }
 
-    const command = new PutObjectCommand({
+    const params = {
       Bucket: S3_BUCKET_NAME,
       Key: key,
       Body: fileBuffer,
       ContentType: contentType,
-      ...(isPublic && { ACL: 'public-read' }),
-    });
+    };
+
+    if (acl) {
+      params.ACL = acl;
+    }
+
+    const command = new PutObjectCommand(params);
 
     await s3Client.send(command);
     return this.getPublicUrl(key);
