@@ -1,19 +1,4 @@
-fastapi==0.115.8
-uvicorn[standard]==0.34.0
-pydantic==2.10.6
-pydantic-settings==2.7.1
-python-dotenv==1.0.1
-
-# Database (MySQL & SQLAlchemy)
-sqlalchemy==2.0.38
-pymysql==1.1.1
-cryptography==44.0.1
-alembic==1.14.1
-
-# AWS S3 / Object Storage
-boto3==1.36.21
-
-# Machine Learning & Data Processing
+# Python dependencies for Machine Learning Models & Processing Pipelines
 scikit-learn==1.6.1
 xgboost==2.1.4
 pandas==2.2.3
