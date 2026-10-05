@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 type Zone = {
   id: string;
@@ -176,7 +177,14 @@ export default function FertilizerScreen() {
                 key={zone.id}
                 accessibilityRole="button"
                 accessibilityLabel={`${zone.name}, ${zone.slope}, ${zone.trees} trees, ${zone.status}, soil moisture ${zone.moisture} percent. View details.`}
-                onPress={() => setSelected(zone)}
+                onPress={() =>
+  router.push({
+    pathname: "/fertilizer/[zoneId]",
+    params: {
+      zoneId: zone.id,
+    },
+  })
+}
                 style={({ pressed }) => [
                   styles.zoneCard,
                   pressed && styles.pressed,
