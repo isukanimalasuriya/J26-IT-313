@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
 
     if set(expected) != set(FertilizerInput.model_fields):
         raise RuntimeError(
-            "Model features do not match the API input schema."
+            "Model features do not match the API input schemas."
         )
 
     app.state.features = expected
