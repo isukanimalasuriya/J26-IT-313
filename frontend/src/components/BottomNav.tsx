@@ -61,7 +61,11 @@ export default function BottomNav() {
             key={item.label}
             style={styles.navItem}
             activeOpacity={0.7}
-            onPress={() => router.push(item.route as any)}
+            onPress={() => {
+  if (!active) {
+    router.replace(item.route as any);
+  }
+}}
           >
             <Icon
               size={27}
