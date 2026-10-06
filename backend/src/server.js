@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import apiRouter from './routes/index.js';
+import sensorRoutes from "./routes/sensorRoutes.js";
 import { testDbConnection } from './config/db.js';
 
 dotenv.config();
@@ -44,6 +45,7 @@ app.get('/', (req, res) => {
 
 // Mount API routes
 app.use('/api', apiRouter);
+app.use('/api/sensors', sensorRoutes);
 
 // Start server
 app.listen(PORT, async () => {
