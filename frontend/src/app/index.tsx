@@ -6,7 +6,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // Sample inputs matching your trained model's 19 features.
 const sampleInput = {
-  tree_age_years: 10,
+  tree_age_years: 1,
   soil_ph: 5.5,
   nitrogen_mg_kg: 29.1,
   phosphorus_mg_kg: 32.5,
@@ -33,48 +33,58 @@ export default function HomeScreen() {
   const [error, setError] = useState("");
 
   async function getPrediction() {
-    setLoading(true);
-    setResult(null);
-    setError("");
+  setLoading(true);
+  setResult(null);
+  setError("");
 
-    try {
-      if (!API_URL) {
-        throw new Error("EXPO_PUBLIC_API_URL is missing. Check frontend/.env.");
-      }
-
-      const response = await fetch(
-        `${API_URL.replace(/\/$/, "")}/api/predict`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(sampleInput),
-        },
+  try {
+    if (!API_URL) {
+      throw new Error(
+        "EXPO_PUBLIC_API_URL is missing. Check frontend/.env."
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const detail =
-          typeof data.detail === "string"
-            ? data.detail
-            : JSON.stringify(data.detail);
-
-        throw new Error(detail || `Server error: ${response.status}`);
-      }
-
-      if (typeof data.fertilizer_amount_kg_tree !== "number") {
-        throw new Error("Unexpected prediction response.");
-      }
-
-      setResult(data.fertilizer_amount_kg_tree);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Connection failed.");
-    } finally {
-      setLoading(false);
     }
+
+    const response = await fetch(
+      `${API_URL.replace(/\/$/, "")}/api/fertilizer/predict`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sampleInput),
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("Prediction response:", data);
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        data.message ||
+        `Server error: ${response.status}`
+      );
+    }
+
+    if (typeof data?.data?.prediction !== "number") {
+      throw new Error("Unexpected prediction response.");
+    }
+
+    setResult(data.data.prediction);
+
+  } catch (err) {
+    console.error("Prediction error:", err);
+
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Connection failed."
+    );
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <View style={styles.container}>
