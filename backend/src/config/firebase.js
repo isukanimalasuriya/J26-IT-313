@@ -1,4 +1,8 @@
-import admin from "firebase-admin";
+// src/config/firebase.js
+
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -15,12 +19,13 @@ const serviceAccount = JSON.parse(
   fs.readFileSync(serviceAccountPath, "utf8")
 );
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+// Initialize Firebase Admin only once
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert(serviceAccount),
   });
 }
 
-const db = admin.firestore();
+const db = getFirestore();
 
-export { admin, db };
+export { db };

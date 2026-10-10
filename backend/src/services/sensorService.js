@@ -1,4 +1,7 @@
-import { db, admin } from "../config/firebase.js";
+// src/services/sensorService.js
+
+import { db } from "../config/firebase.js";
+import { FieldValue } from "firebase-admin/firestore";
 
 export const saveSensorReading = async (data) => {
   const reading = {
@@ -12,13 +15,14 @@ export const saveSensorReading = async (data) => {
     soilPh: Number(data.soilPh),
     salinity: Number(data.salinity),
 
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
   };
 
   const document = await db
     .collection("sensor_readings")
     .add(reading);
 
+    console.log("✅ Saved to Firestore. Document ID:", document.id);
   return {
     id: document.id,
     ...reading,
