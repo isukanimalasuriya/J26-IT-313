@@ -1,14 +1,20 @@
 import express from "express";
 
 import {
-  createSensorReading,
-  fetchSensorReadings,
+  saveSensorData,
+  latestSensorData,
+  sensorHistory,
 } from "../controllers/sensorController.js";
 
 const router = express.Router();
 
-router.post("/", createSensorReading);
+// ESP32 sends sensor data to MySQL
+router.post("/", saveSensorData);
 
-router.get("/", fetchSensorReadings);
+// Get latest sensor readings
+router.get("/latest/:deviceId", latestSensorData);
+
+// Get historical sensor readings
+router.get("/history/:deviceId", sensorHistory);
 
 export default router;

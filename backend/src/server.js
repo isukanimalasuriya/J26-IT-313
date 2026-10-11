@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import apiRouter from './routes/index.js';
 import sensorRoutes from "./routes/sensorRoutes.js";
+import treeRoutes from "./routes/treeRoutes.js";
 import { testDbConnection } from './config/db.js';
 
 dotenv.config();
@@ -46,10 +47,14 @@ app.get('/', (req, res) => {
 // Mount API routes
 app.use('/api', apiRouter);
 app.use('/api/sensors', sensorRoutes);
+app.use("/api/zones", treeRoutes);
 
 // Start server
-app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, "0.0.0.0", async () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
+  console.log(`Local network URL: http://10.67.165.135:${PORT}`);
+  console.log(`Sensor endpoint: http://10.67.165.135:${PORT}/api/sensors`);
+
   console.log(`Checking MySQL database connection...`);
   const dbStatus = await testDbConnection();
   console.log(`Database status:`, dbStatus);
