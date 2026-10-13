@@ -5,18 +5,12 @@ import { ArrowLeft, Camera, Leaf } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 
-type Prediction = {
-  label: string;
-  confidence: number;
-};
-
 type DiseaseResponse = {
   disease: string;
   confidence: number;
-  predictions: Prediction[];
 };
 
-const API_BASE_URL = Platform.select({
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? Platform.select({
   android: "http://10.0.2.2:8000",
   default: "http://127.0.0.1:8000",
 });
@@ -113,13 +107,6 @@ export default function PredictionScreen() {
             <Text style={styles.resultEyebrow}>MODEL OUTPUT</Text>
             <Text style={styles.resultTitle}>{formatLabel(prediction.disease)}</Text>
             <Text style={styles.confidence}>{Math.round(prediction.confidence * 100)}% confidence</Text>
-            <Text style={styles.resultSubtitle}>Other possibilities</Text>
-            {prediction.predictions.slice(1).map((item) => (
-              <View key={item.label} style={styles.predictionRow}>
-                <Text style={styles.predictionLabel}>{formatLabel(item.label)}</Text>
-                <Text style={styles.predictionValue}>{Math.round(item.confidence * 100)}%</Text>
-              </View>
-            ))}
             <Text style={styles.disclaimer}>
               This result is an AI estimate and should be confirmed by an agricultural expert.
             </Text>
@@ -191,15 +178,5 @@ const styles = StyleSheet.create({
   resultEyebrow: { color: "#168B46", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   resultTitle: { color: "#183322", fontSize: 24, fontWeight: "700", marginTop: 8 },
   confidence: { color: "#168B46", fontSize: 15, fontWeight: "700", marginTop: 6 },
-  resultSubtitle: { color: "#637268", fontSize: 13, marginTop: 22 },
-  predictionRow: {
-    borderBottomColor: "#D4E8D9",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-  },
-  predictionLabel: { color: "#183322", fontSize: 14 },
-  predictionValue: { color: "#637268", fontSize: 14, fontWeight: "700" },
   disclaimer: { color: "#637268", fontSize: 12, lineHeight: 18, marginTop: 16 },
 });
