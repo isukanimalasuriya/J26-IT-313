@@ -1,4 +1,4 @@
-import { useWindowDimensions } from "react-native";
+import { router } from "expo-router";
 import {
   Alert,
   Image,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -142,7 +143,11 @@ export default function HarvestDashboard() {
             <Pressable
               key={label}
               accessibilityRole="button"
-              onPress={() => showPreviewMessage(label)}
+              onPress={() =>
+                label === "Analyze Image"
+                  ? router.push("/harvest/detection")
+                  : showPreviewMessage(label)
+              }
               style={styles.action}
             >
               <View style={styles.actionIcon}>
