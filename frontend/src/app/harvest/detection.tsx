@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { router } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -44,7 +45,6 @@ export default function CoconutDetectionScreen() {
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [pickerAction, setPickerAction] = useState<PickerAction>(null);
   const [error, setError] = useState("");
-  const [resultNotice, setResultNotice] = useState("");
   const cameraRef = useRef<CameraView>(null);
   const permissionRequested = useRef(false);
   const actionInProgress = useRef(false);
@@ -155,13 +155,10 @@ export default function CoconutDetectionScreen() {
 
   function continueToResult() {
     if (!imageUri || actionInProgress.current) return;
-    setResultNotice(
-      "The Detection Result page is not available yet. This photo has not been analyzed.",
-    );
-    Alert.alert(
-      "Detection Result",
-      "Your image is ready, but the Detection Result page and coconut AI inference are not implemented yet. This photo has not been analyzed.",
-    );
+    router.push({
+      pathname: "/harvest/results",
+      params: { imageUri, treeId: "C023", fromDetection: "true" },
+    });
   }
 
   const cameraAvailable = Boolean(permission?.granted) && !cameraError;
@@ -385,12 +382,6 @@ export default function CoconutDetectionScreen() {
         >
           <Text style={styles.continueText}>Continue to Detection Result</Text>
         </Pressable>
-
-        {resultNotice ? (
-          <Text accessibilityRole="alert" style={styles.resultNotice}>
-            {resultNotice}
-          </Text>
-        ) : null}
 
         <Text style={styles.disclaimer}>
           Photo selection and capture only. No coconut AI analysis is connected.
@@ -675,13 +666,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 14,
     fontWeight: "700",
-  },
-  resultNotice: {
-    marginTop: 10,
-    color: "#8A5A00",
-    fontSize: 12,
-    lineHeight: 17,
-    textAlign: "center",
   },
   disclaimer: {
     marginTop: 10,
