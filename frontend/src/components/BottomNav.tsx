@@ -1,4 +1,4 @@
-import { router, usePathname } from "expo-router";
+import { Link, usePathname, type Href } from "expo-router";
 import {
   House,
   Grid2X2,
@@ -6,7 +6,7 @@ import {
   Sprout,
   CircleDollarSign,
 } from "lucide-react-native";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 
 const GREEN = "#086B2A";
 const INACTIVE = "#7A7A7A";
@@ -40,7 +40,7 @@ export default function BottomNav() {
       route: "/finance",
       icon: CircleDollarSign,
     },
-  ];
+  ] as const;
 
   const isActive = (route: string) => {
     if (route === "/") {
@@ -57,28 +57,21 @@ export default function BottomNav() {
         const active = isActive(item.route);
 
         return (
-          <TouchableOpacity
-            key={item.label}
-            style={styles.navItem}
-            activeOpacity={0.7}
-            onPress={() => {
-  if (!active) {
-    router.replace(item.route as any);
-  }
-}}
-          >
-            <Icon
-              size={27}
-              color={active ? GREEN : INACTIVE}
-              strokeWidth={active ? 2.6 : 2}
-            />
+          <Link key={item.label} href={item.route as Href} asChild>
+            <Pressable style={styles.navItem}>
+              <Icon
+                size={27}
+                color={active ? GREEN : INACTIVE}
+                strokeWidth={active ? 2.6 : 2}
+              />
 
-            <Text style={[styles.label, active && styles.activeLabel]}>
-              {item.label}
-            </Text>
+              <Text style={[styles.label, active && styles.activeLabel]}>
+                {item.label}
+              </Text>
 
-            {active && <View style={styles.activeIndicator} />}
-          </TouchableOpacity>
+              {active && <View style={styles.activeIndicator} />}
+            </Pressable>
+          </Link>
         );
       })}
     </View>
