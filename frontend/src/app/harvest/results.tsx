@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -344,52 +345,66 @@ export default function DetectionResultsScreen() {
 
       setAnalysisLoading(true);
       try {
-        const form = new FormData();
         const uploadDetails = getImageUploadDetails(imageUri, imageName, imageType);
-        const nativeForm = form as unknown as {
-          append(name: string, value: ReactNativeImageFile): void;
-        };
-        nativeForm.append("image", {
-          uri: imageUri,
-          name: uploadDetails.name,
-          type: uploadDetails.type,
-        });
+        let responseStatus: number;
+        let responseText: string;
 
-        let response: Response;
         try {
           if (__DEV__) {
-            console.log("[Coconut AI] POST", requestUrl);
+            console.log("[Coconut AI] POST", requestUrl, "Platform:", Platform.OS);
           }
 
-          response = await fetch(requestUrl, {
-            method: "POST",
-            body: form,
-          });
+          if (Platform.OS === "web") {
+            const form = new FormData();
+            const blobResponse = await fetch(imageUri);
+            const blob = await blobResponse.blob();
+            const file = new File([blob], uploadDetails.name, {
+              type: uploadDetails.type,
+            });
+            form.append("image", file);
+
+            const response = await fetch(requestUrl, {
+              method: "POST",
+              body: form,
+            });
+            responseStatus = response.status;
+            responseText = await response.text();
+          } else {
+            const { File: ExpoFile, UploadType } = require("expo-file-system");
+            const file = new ExpoFile(imageUri);
+            const uploadResult = await file.upload(requestUrl, {
+              uploadType: UploadType.MULTIPART,
+              fieldName: "image",
+              mimeType: uploadDetails.type,
+            });
+            responseStatus = uploadResult.status;
+            responseText = uploadResult.body;
+          }
         } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
           if (__DEV__) {
-            console.warn("[Coconut AI] fetch network error:", error instanceof Error ? error.message : error);
+            console.warn("[Coconut AI] upload error:", detail);
           }
           throw new Error(
-            "Could not connect to the analysis server. Check that your phone and backend are reachable on the same network.",
+            `Could not connect to the analysis server (${detail}). Check that your phone and backend are reachable on the same network.`,
           );
         }
 
-        const responseText = await response.text();
         if (__DEV__) {
-          console.log("[Coconut AI] HTTP status:", response.status, "body:", responseText.slice(0, 240));
+          console.log("[Coconut AI] HTTP status:", responseStatus, "body:", responseText.slice(0, 240));
         }
 
         let responseBody: unknown;
         try {
           responseBody = JSON.parse(responseText);
         } catch {
-          if (!response.ok) {
-            throw new Error(`The analysis server returned an error (HTTP ${response.status}).`);
+          if (responseStatus < 200 || responseStatus >= 300) {
+            throw new Error(`The analysis server returned an error (HTTP ${responseStatus}).`);
           }
           throw new Error("The analysis server returned an unreadable response.");
         }
 
-        if (!response.ok) {
+        if (responseStatus < 200 || responseStatus >= 300) {
           const serverMessage =
             isRecord(responseBody) && typeof responseBody.error === "string"
               ? responseBody.error
@@ -397,19 +412,19 @@ export default function DetectionResultsScreen() {
 
           if (serverMessage) {
             if (__DEV__) {
-              console.warn("[Coconut AI] server error:", response.status, serverMessage);
+              console.warn("[Coconut AI] server error:", responseStatus, serverMessage);
             }
             throw new Error(serverMessage);
           }
 
-          if (response.status >= 500) {
+          if (responseStatus >= 500) {
             throw new Error(
               "The AI analysis service could not process this image. Please try again later.",
             );
           }
 
           throw new Error(
-            `The analysis request failed (HTTP ${response.status}).`,
+            `The analysis request failed (HTTP ${responseStatus}).`,
           );
         }
 
