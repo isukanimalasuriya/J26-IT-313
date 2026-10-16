@@ -66,6 +66,12 @@ const MATURITY_LABELS: Record<(typeof MATURITY_CLASSES)[number], string> = {
   matured: "Matured",
   tender: "Tender",
 } as const;
+const MATURITY_COLORS: Record<(typeof MATURITY_CLASSES)[number], string> = {
+  dry: "#C43A3A",
+  immature: "#F0A11A",
+  matured: "#328044",
+  tender: "#12A878",
+};
 
 type MaturityClass = (typeof MATURITY_CLASSES)[number];
 type CoconutDetection = {
@@ -287,6 +293,7 @@ export default function DetectionResultsScreen() {
       : "C023";
   const [loadedImageUri, setLoadedImageUri] = useState<string>();
   const [failedImageUri, setFailedImageUri] = useState<string>();
+  const [imageFrameSize, setImageFrameSize] = useState({ width: 0, height: 0 });
   const [analysis, setAnalysis] = useState<CoconutAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(Boolean(imageUri));
   const [analysisError, setAnalysisError] = useState("");
@@ -314,6 +321,17 @@ export default function DetectionResultsScreen() {
           : "PENDING";
   const horizontalPadding = width < 360 ? 18 : 24;
   const imageHeight = Math.min(Math.max((width - horizontalPadding * 2) * 0.68, 210), 300);
+  const imageScale =
+    analysis && imageFrameSize.width > 0 && imageFrameSize.height > 0
+      ? Math.min(
+          imageFrameSize.width / analysis.image_dimensions.width,
+          imageFrameSize.height / analysis.image_dimensions.height,
+        )
+      : 0;
+  const renderedImageWidth = analysis ? analysis.image_dimensions.width * imageScale : 0;
+  const renderedImageHeight = analysis ? analysis.image_dimensions.height * imageScale : 0;
+  const imageOffsetX = (imageFrameSize.width - renderedImageWidth) / 2;
+  const imageOffsetY = (imageFrameSize.height - renderedImageHeight) / 2;
 
   useEffect(() => {
     let active = true;
@@ -519,6 +537,10 @@ export default function DetectionResultsScreen() {
 
         <View
           style={[styles.imageFrame, { height: imageHeight }]}
+          onLayout={(event) => {
+            const { width: frameWidth, height: frameHeight } = event.nativeEvent.layout;
+            setImageFrameSize({ width: frameWidth, height: frameHeight });
+          }}
           accessibilityLabel={imageUri ? "Selected coconut image" : "No image selected"}
         >
           {imageUri && !imageError ? (
@@ -526,13 +548,55 @@ export default function DetectionResultsScreen() {
               <Image
                 source={{ uri: imageUri }}
                 style={styles.image}
-                resizeMode="cover"
+                resizeMode="contain"
                 onLoadEnd={() => setLoadedImageUri(imageUri)}
                 onError={() => {
                   setFailedImageUri(imageUri);
                 }}
                 accessibilityLabel="Selected coconut photo"
               />
+              {analysis && imageScale > 0 ? (
+                <View
+                  pointerEvents="none"
+                  style={[
+                    styles.detectionOverlay,
+                    {
+                      left: imageOffsetX,
+                      top: imageOffsetY,
+                      width: renderedImageWidth,
+                      height: renderedImageHeight,
+                    },
+                  ]}
+                >
+                  {analysis.detections.map((detection) => {
+                    const { x1, y1, x2, y2 } = detection.bounding_box;
+                    const color = MATURITY_COLORS[detection.maturity];
+                    return (
+                      <View
+                        key={detection.coconut_index}
+                        style={[
+                          styles.detectionBox,
+                          {
+                            left: x1 * imageScale,
+                            top: y1 * imageScale,
+                            width: (x2 - x1) * imageScale,
+                            height: (y2 - y1) * imageScale,
+                            borderColor: color,
+                            backgroundColor: `${color}22`,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[styles.detectionLabel, { backgroundColor: color }]}
+                          numberOfLines={1}
+                        >
+                          {detection.coconut_index} · {MATURITY_LABELS[detection.maturity]}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : null}
               {imageLoading ? (
                 <View style={styles.imageLoading}>
                   <ActivityIndicator color={COLORS.white} size="large" />
@@ -822,6 +886,27 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     width: "100%",
     height: "100%",
+  },
+  detectionOverlay: {
+    position: "absolute",
+  },
+  detectionBox: {
+    position: "absolute",
+    borderWidth: 2,
+    borderRadius: 6,
+  },
+  detectionLabel: {
+    position: "absolute",
+    top: 2,
+    left: 2,
+    maxWidth: 140,
+    overflow: "hidden",
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    color: COLORS.white,
+    fontSize: 9,
+    fontWeight: "800",
   },
   imageLoading: {
     ...StyleSheet.absoluteFill,

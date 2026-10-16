@@ -25,6 +25,7 @@ CLASS_NAMES_PATH = MODEL_DIR / "class_names.json"
 
 IMAGE_SIZE = 260
 CONFIDENCE_THRESHOLD = 0.25
+NMS_IOU_THRESHOLD = 0.45
 
 
 def analyze_image(image_path: str) -> dict:
@@ -73,6 +74,7 @@ def analyze_image(image_path: str) -> dict:
     detection_result = detector.predict(
         image_bgr,
         conf=CONFIDENCE_THRESHOLD,
+        iou=NMS_IOU_THRESHOLD,
         verbose=False,
     )[0]
 
