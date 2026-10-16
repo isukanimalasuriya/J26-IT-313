@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { testDbConnection } from '../config/db.js';
 import fertilizerRoutes from './fertilizerRoutes.js';
+import coconutRoutes from './coconutRoutes.js';
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.get('/health', async (req, res) => {
 
 // Fertilizer prediction routes
 router.use('/fertilizer', fertilizerRoutes);
+router.use('/coconut', coconutRoutes);
 
 export default router;

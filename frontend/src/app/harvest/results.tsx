@@ -7,7 +7,7 @@ import {
   Leaf,
   Sprout,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -34,38 +34,250 @@ const COLORS = {
 const maturityStages = [
   {
     name: "Tender",
+    modelClass: "tender",
     description: "Young coconuts",
     color: "#12A878",
   },
   {
     name: "Immature",
+    modelClass: "immature",
     description: "Still developing",
     color: "#F0A11A",
   },
   {
     name: "Matured",
+    modelClass: "matured",
     description: "Ready for the intended harvest",
     color: "#328044",
   },
   {
     name: "Dry",
+    modelClass: "dry",
     description: "Dry or over-mature",
     color: "#C43A3A",
   },
 ] as const;
 
+const MATURITY_CLASSES = ["dry", "immature", "matured", "tender"] as const;
+const MATURITY_LABELS: Record<(typeof MATURITY_CLASSES)[number], string> = {
+  dry: "Dry",
+  immature: "Immature",
+  matured: "Matured",
+  tender: "Tender",
+} as const;
+
+type MaturityClass = (typeof MATURITY_CLASSES)[number];
+type CoconutDetection = {
+  coconut_index: number;
+  bounding_box: { x1: number; y1: number; x2: number; y2: number };
+  maturity: MaturityClass;
+  maturity_confidence: number;
+  detection_confidence: number;
+};
+type CoconutAnalysis = {
+  success: true;
+  image_dimensions: { width: number; height: number };
+  detected_coconut_count: number;
+  maturity_counts: Record<MaturityClass, number>;
+  detections: CoconutDetection[];
+};
+type ReactNativeImageFile = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+function getNormalizedApiBaseUrl(urlValue: string | undefined) {
+  if (!urlValue) return "";
+
+  const trimmed = urlValue.trim();
+  if (!trimmed) return "";
+
+  return `${trimmed.replace(/\/+$/, "").replace(/\/api$/i, "")}/api`;
+}
+
+const API_BASE_URL = getNormalizedApiBaseUrl(API_URL);
+
+function getAnalyzeRequestUrl() {
+  if (!API_BASE_URL) return "";
+  return `${API_BASE_URL}/coconut/analyze`;
+}
+
+function isLocalhostUrl(urlValue: string | undefined) {
+  if (!urlValue) return false;
+
+  try {
+    const resolved = new URL(urlValue);
+    const hostname = resolved.hostname.toLowerCase();
+    return [
+      "localhost",
+      "127.0.0.1",
+      "0.0.0.0",
+      "::1",
+      "10.0.2.2",
+    ].includes(hostname);
+  } catch {
+    return false;
+  }
+}
+
 function getSingleParam(value: string | string[] | undefined) {
   return typeof value === "string" ? value : undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isMaturityClass(value: unknown): value is MaturityClass {
+  return (
+    typeof value === "string" &&
+    Object.prototype.hasOwnProperty.call(MATURITY_LABELS, value)
+  );
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+function isConfidence(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
+}
+
+function parseAnalysis(value: unknown): CoconutAnalysis | null {
+  if (!isRecord(value) || value.success !== true) return null;
+
+  const dimensions = value.image_dimensions;
+  const rawCounts = value.maturity_counts;
+  const width = isRecord(dimensions) ? dimensions.width : undefined;
+  const height = isRecord(dimensions) ? dimensions.height : undefined;
+  const detectedCount = value.detected_coconut_count;
+  if (
+    !isRecord(dimensions) ||
+    !isPositiveInteger(width) ||
+    !isPositiveInteger(height) ||
+    !isRecord(rawCounts) ||
+    !Array.isArray(value.detections) ||
+    !isNonNegativeInteger(detectedCount)
+  ) {
+    return null;
+  }
+
+  const maturityCounts: Record<MaturityClass, number> = {
+    dry: 0,
+    immature: 0,
+    matured: 0,
+    tender: 0,
+  };
+  for (const maturity of MATURITY_CLASSES) {
+    const count = rawCounts[maturity];
+    if (!isNonNegativeInteger(count)) return null;
+    maturityCounts[maturity] = count;
+  }
+
+  const detections: CoconutDetection[] = [];
+  for (const rawDetection of value.detections) {
+    if (!isRecord(rawDetection) || !isRecord(rawDetection.bounding_box)) return null;
+
+    const box = rawDetection.bounding_box;
+    const { x1, y1, x2, y2 } = box;
+    const coconutIndex = rawDetection.coconut_index;
+    const detectionConfidence = rawDetection.detection_confidence;
+    const maturityConfidence = rawDetection.maturity_confidence;
+    const maturity = rawDetection.maturity;
+    if (
+      !isPositiveInteger(coconutIndex) ||
+      !isMaturityClass(maturity) ||
+      !isConfidence(detectionConfidence) ||
+      !isConfidence(maturityConfidence) ||
+      !isNonNegativeInteger(x1) ||
+      !isNonNegativeInteger(y1) ||
+      !isPositiveInteger(x2) ||
+      !isPositiveInteger(y2) ||
+      x2 > width ||
+      y2 > height ||
+      x2 <= x1 ||
+      y2 <= y1
+    ) {
+      return null;
+    }
+
+    detections.push({
+      coconut_index: coconutIndex,
+      bounding_box: { x1, y1, x2, y2 },
+      maturity,
+      maturity_confidence: maturityConfidence,
+      detection_confidence: detectionConfidence,
+    });
+  }
+
+  if (detections.length !== detectedCount) return null;
+
+  const actualCounts: Record<MaturityClass, number> = {
+    dry: 0,
+    immature: 0,
+    matured: 0,
+    tender: 0,
+  };
+  for (const detection of detections) {
+    actualCounts[detection.maturity] += 1;
+  }
+  if (
+    MATURITY_CLASSES.some(
+      (maturity) => actualCounts[maturity] !== maturityCounts[maturity],
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    success: true,
+    image_dimensions: {
+      width,
+      height,
+    },
+    detected_coconut_count: detectedCount,
+    maturity_counts: maturityCounts,
+    detections,
+  };
+}
+
+function getImageUploadDetails(
+  imageUri: string,
+  requestedName: string | undefined,
+  requestedType: string | undefined,
+) {
+  const uriName = imageUri.split(/[\\/]/).pop()?.split(/[?#]/)[0];
+  const name = requestedName || uriName || "coconut-image.jpg";
+  const extension = name.split(".").pop()?.toLowerCase();
+  const type =
+    requestedType ||
+    (extension === "png"
+      ? "image/png"
+      : extension === "webp"
+        ? "image/webp"
+        : "image/jpeg");
+  return { name, type };
 }
 
 export default function DetectionResultsScreen() {
   const { width } = useWindowDimensions();
   const params = useLocalSearchParams<{
     imageUri?: string | string[];
+    imageName?: string | string[];
+    imageType?: string | string[];
     treeId?: string | string[];
     fromDetection?: string | string[];
   }>();
   const imageUri = getSingleParam(params.imageUri);
+  const imageName = getSingleParam(params.imageName);
+  const imageType = getSingleParam(params.imageType);
   const requestedTreeId = getSingleParam(params.treeId);
   const fromDetection = getSingleParam(params.fromDetection) === "true";
   const treeId =
@@ -74,10 +286,162 @@ export default function DetectionResultsScreen() {
       : "C023";
   const [loadedImageUri, setLoadedImageUri] = useState<string>();
   const [failedImageUri, setFailedImageUri] = useState<string>();
+  const [analysis, setAnalysis] = useState<CoconutAnalysis | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(Boolean(imageUri));
+  const [analysisError, setAnalysisError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
   const imageError = Boolean(imageUri && failedImageUri === imageUri);
   const imageLoading = Boolean(imageUri && !imageError && loadedImageUri !== imageUri);
+  const hasSelectedImage = Boolean(imageUri);
+  const analysisStatusLabel = analysisLoading
+    ? "ANALYZING IMAGE"
+    : analysis
+      ? "AI ANALYSIS COMPLETE"
+      : analysisError
+        ? "ANALYSIS FAILED"
+        : hasSelectedImage
+          ? "WAITING FOR ANALYSIS"
+          : "SELECT AN IMAGE";
+  const summaryStatusLabel = analysisLoading
+    ? "ANALYZING"
+    : analysis
+      ? "COMPLETE"
+      : analysisError
+        ? "FAILED"
+        : hasSelectedImage
+          ? "WAITING"
+          : "PENDING";
   const horizontalPadding = width < 360 ? 18 : 24;
   const imageHeight = Math.min(Math.max((width - horizontalPadding * 2) * 0.68, 210), 300);
+
+  useEffect(() => {
+    let active = true;
+
+    async function analyzeSelectedImage() {
+      setAnalysis(null);
+      setAnalysisError("");
+
+      if (!imageUri) {
+        setAnalysisLoading(false);
+        setAnalysisError("No image was provided. Return and select or capture a photo first.");
+        return;
+      }
+
+      if (!API_BASE_URL) {
+        setAnalysisLoading(false);
+        setAnalysisError("The analysis server URL is not configured in frontend/.env.");
+        return;
+      }
+
+      const requestUrl = getAnalyzeRequestUrl();
+      if (isLocalhostUrl(API_URL)) {
+        setAnalysisLoading(false);
+        setAnalysisError(
+          "Expo Go cannot reach localhost. Set EXPO_PUBLIC_API_URL to your computer's LAN IP, such as http://192.168.1.50:5000.",
+        );
+        return;
+      }
+
+      setAnalysisLoading(true);
+      try {
+        const form = new FormData();
+        const uploadDetails = getImageUploadDetails(imageUri, imageName, imageType);
+        const nativeForm = form as unknown as {
+          append(name: string, value: ReactNativeImageFile): void;
+        };
+        nativeForm.append("image", {
+          uri: imageUri,
+          name: uploadDetails.name,
+          type: uploadDetails.type,
+        });
+
+        let response: Response;
+        try {
+          if (__DEV__) {
+            console.log("[Coconut AI] POST", requestUrl);
+          }
+
+          response = await fetch(requestUrl, {
+            method: "POST",
+            body: form,
+          });
+        } catch (error) {
+          if (__DEV__) {
+            console.warn("[Coconut AI] fetch network error:", error instanceof Error ? error.message : error);
+          }
+          throw new Error(
+            "Could not connect to the analysis server. Check that your phone and backend are reachable on the same network.",
+          );
+        }
+
+        const responseText = await response.text();
+        if (__DEV__) {
+          console.log("[Coconut AI] HTTP status:", response.status, "body:", responseText.slice(0, 240));
+        }
+
+        let responseBody: unknown;
+        try {
+          responseBody = JSON.parse(responseText);
+        } catch {
+          if (!response.ok) {
+            throw new Error(`The analysis server returned an error (HTTP ${response.status}).`);
+          }
+          throw new Error("The analysis server returned an unreadable response.");
+        }
+
+        if (!response.ok) {
+          const serverMessage =
+            isRecord(responseBody) && typeof responseBody.error === "string"
+              ? responseBody.error
+              : "";
+
+          if (serverMessage) {
+            if (__DEV__) {
+              console.warn("[Coconut AI] server error:", response.status, serverMessage);
+            }
+            throw new Error(serverMessage);
+          }
+
+          if (response.status >= 500) {
+            throw new Error(
+              "The AI analysis service could not process this image. Please try again later.",
+            );
+          }
+
+          throw new Error(
+            `The analysis request failed (HTTP ${response.status}).`,
+          );
+        }
+
+        const parsedAnalysis = parseAnalysis(responseBody);
+        if (!parsedAnalysis) {
+          throw new Error("The analysis server returned an invalid prediction response.");
+        }
+
+        if (active) setAnalysis(parsedAnalysis);
+      } catch (reason) {
+        if (active) {
+          const message =
+            reason instanceof Error
+              ? reason.message
+              : "Coconut analysis failed. Please try again.";
+
+          setAnalysisError(message);
+
+          if (__DEV__) {
+            console.warn("Coconut analysis failed:", message);
+          }
+        }
+      } finally {
+        if (active) setAnalysisLoading(false);
+      }
+    }
+
+    void analyzeSelectedImage();
+    return () => {
+      active = false;
+    };
+  }, [imageUri, imageName, imageType, retryCount]);
 
   function returnToDetection() {
     if (fromDetection && router.canGoBack()) {
@@ -129,7 +493,7 @@ export default function DetectionResultsScreen() {
             onPress={() =>
               Alert.alert(
                 "About these results",
-                "Coconut detection and maturity classification are not connected yet. No detections or maturity predictions are shown on this screen.",
+                "Coconut detection and maturity classifications are returned by the connected AI inference service.",
               )
             }
             style={styles.iconButton}
@@ -152,7 +516,7 @@ export default function DetectionResultsScreen() {
                 onError={() => {
                   setFailedImageUri(imageUri);
                 }}
-                accessibilityLabel="Selected coconut photo, not analyzed"
+                accessibilityLabel="Selected coconut photo"
               />
               {imageLoading ? (
                 <View style={styles.imageLoading}>
@@ -162,7 +526,7 @@ export default function DetectionResultsScreen() {
               ) : null}
               <View style={styles.imageBadge}>
                 <View style={styles.badgeDot} />
-                <Text style={styles.imageBadgeText}>IMAGE PREVIEW · NOT ANALYZED</Text>
+                <Text style={styles.imageBadgeText}>{analysisStatusLabel}</Text>
               </View>
             </>
           ) : (
@@ -174,7 +538,7 @@ export default function DetectionResultsScreen() {
               <Text style={styles.emptyImageText}>
                 {imageError
                   ? "Return to Coconut Detection and choose the photo again."
-                  : "Choose a coconut photo to view it here. No analysis is available yet."}
+                  : "Select a coconut image to begin analysis."}
               </Text>
               <Pressable
                 accessibilityRole="button"
@@ -191,23 +555,39 @@ export default function DetectionResultsScreen() {
         <View style={styles.sectionHeading}>
           <Text style={styles.sectionTitle}>Detection Summary</Text>
           <View style={styles.pendingPill}>
-            <Text style={styles.pendingPillText}>PENDING</Text>
+            <Text style={styles.pendingPillText}>{summaryStatusLabel}</Text>
           </View>
         </View>
         <View style={styles.summaryCard}>
           <View style={styles.totalRow}>
             <View>
               <Text style={styles.totalLabel}>Total coconuts detected</Text>
-              <Text style={styles.totalNote}>AI detection is not connected</Text>
+              <Text style={styles.totalNote}>
+                {analysis
+                  ? `${analysis.image_dimensions.width} × ${analysis.image_dimensions.height} image`
+                  : analysisLoading
+                    ? "Running coconut detection and maturity classification"
+                    : "Results appear after successful AI analysis"}
+              </Text>
             </View>
-            <Text style={styles.totalValue}>—</Text>
+            {analysisLoading ? (
+              <ActivityIndicator color={COLORS.green} />
+            ) : (
+              <Text style={styles.totalValue}>
+                {analysis ? analysis.detected_coconut_count : "—"}
+              </Text>
+            )}
           </View>
           <View style={styles.divider} />
           {maturityStages.map((stage) => (
             <View key={stage.name} style={styles.summaryRow}>
               <View style={[styles.stageDot, { backgroundColor: stage.color }]} />
               <Text style={styles.summaryStage}>{stage.name}</Text>
-              <Text style={styles.summaryUnavailable}>Not available</Text>
+              <Text style={styles.summaryUnavailable}>
+                {analysis
+                  ? analysis.maturity_counts[stage.modelClass]
+                  : "—"}
+              </Text>
             </View>
           ))}
         </View>
@@ -216,36 +596,108 @@ export default function DetectionResultsScreen() {
           <Text style={styles.sectionTitle}>Coconut Maturity Stages</Text>
         </View>
         <Text style={styles.sectionDescription}>
-          Counts and percentages will appear when real model results are available.
+          {analysis
+            ? "Counts by maturity class from the coconut AI analysis."
+            : "Counts and percentages will appear when model results are available."}
         </Text>
         <View style={styles.stageList}>
-          {maturityStages.map((stage) => (
-            <View key={stage.name} style={styles.stageCard}>
-              <View style={[styles.stageIcon, { backgroundColor: `${stage.color}18` }]}>
-                <CircleHelp color={stage.color} size={19} />
+          {maturityStages.map((stage) => {
+            const count = analysis?.maturity_counts[stage.modelClass];
+            const percentage =
+              count !== undefined && analysis && analysis.detected_coconut_count > 0
+                ? Math.round((count / analysis.detected_coconut_count) * 100)
+                : 0;
+            return (
+              <View key={stage.name} style={styles.stageCard}>
+                <View style={[styles.stageIcon, { backgroundColor: `${stage.color}18` }]}>
+                  <CircleHelp color={stage.color} size={19} />
+                </View>
+                <View style={styles.stageContent}>
+                  <View style={styles.stageTopRow}>
+                    <Text style={styles.stageName}>{stage.name}</Text>
+                    <Text style={styles.stageCount}>{count ?? "—"}</Text>
+                  </View>
+                  <Text style={styles.stageDescription}>{stage.description}</Text>
+                  <View style={styles.progressTrack}>
+                    <View
+                      style={[
+                        styles.progressFill,
+                        {
+                          backgroundColor: stage.color,
+                          width: `${percentage}%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.percentageUnavailable}>
+                    {count === undefined
+                      ? "Count and percentage unavailable"
+                      : `${percentage}% of detected coconuts`}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={styles.sectionHeading}>
+          <Text style={styles.sectionTitle}>Individual Detections</Text>
+        </View>
+        <Text style={styles.sectionDescription}>
+          Each detected coconut includes its bounding box and model confidence scores.
+        </Text>
+        <View style={styles.stageList}>
+          {analysis?.detections.map((detection) => (
+            <View key={detection.coconut_index} style={styles.stageCard}>
+              <View style={styles.stageIcon}>
+                <CircleHelp color={COLORS.green} size={19} />
               </View>
               <View style={styles.stageContent}>
                 <View style={styles.stageTopRow}>
-                  <Text style={styles.stageName}>{stage.name}</Text>
-                  <Text style={styles.stageCount}>—</Text>
+                  <Text style={styles.stageName}>
+                    Coconut {detection.coconut_index} · {MATURITY_LABELS[detection.maturity]}
+                  </Text>
+                  <Text style={styles.stageCount}>
+                    {Math.round(detection.maturity_confidence * 100)}%
+                  </Text>
                 </View>
-                <Text style={styles.stageDescription}>{stage.description}</Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { backgroundColor: stage.color, width: "0%" }]} />
-                </View>
-                <Text style={styles.percentageUnavailable}>Count and percentage unavailable</Text>
+                <Text style={styles.stageDescription}>
+                  Box: ({detection.bounding_box.x1}, {detection.bounding_box.y1}) – ({detection.bounding_box.x2}, {detection.bounding_box.y2})
+                </Text>
+                <Text style={styles.stageDescription}>
+                  Detection confidence: {Math.round(detection.detection_confidence * 100)}% · Maturity confidence: {Math.round(detection.maturity_confidence * 100)}%
+                </Text>
               </View>
             </View>
           ))}
+          {analysis && analysis.detections.length === 0 ? (
+            <Text style={styles.sectionDescription}>No coconuts were detected in this image.</Text>
+          ) : null}
         </View>
 
-        <View style={styles.notice}>
+        {analysisLoading ? (
+          <View style={styles.notice}>
+            <ActivityIndicator color={COLORS.green} />
+            <Text style={styles.noticeText}>Analyzing the selected image. This may take a moment.</Text>
+          </View>
+        ) : null}
+        {analysisError ? (
+          <View style={styles.notice} accessibilityRole="alert">
           <Info color={COLORS.green} size={18} />
           <Text style={styles.noticeText}>
-            No YOLOv8 detections or EfficientNetB0 maturity classifications are connected yet.
-            Bounding boxes and sample predictions are intentionally omitted.
+            {analysisError}
           </Text>
-        </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Retry coconut image analysis"
+              disabled={analysisLoading || !imageUri}
+              onPress={() => setRetryCount((count) => count + 1)}
+              style={styles.retryButton}
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         <Pressable
           accessibilityRole="button"
@@ -257,7 +709,7 @@ export default function DetectionResultsScreen() {
           <ArrowRight color={COLORS.white} size={20} />
         </Pressable>
         <Text style={styles.predictionNote}>
-          Harvest timing prediction is unavailable; the Random Forest model is not trained.
+          Harvest timing prediction is separate and is not provided by coconut image analysis.
         </Text>
 
         <Pressable
@@ -588,6 +1040,16 @@ const styles = StyleSheet.create({
     color: "#42584A",
     fontSize: 11,
     lineHeight: 17,
+  },
+  retryButton: {
+    minHeight: 38,
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  retryButtonText: {
+    color: COLORS.green,
+    fontSize: 13,
+    fontWeight: "700",
   },
   detailsButton: {
     minHeight: 54,

@@ -42,6 +42,8 @@ export default function CoconutDetectionScreen() {
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageName, setImageName] = useState("");
+  const [imageType, setImageType] = useState("");
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [pickerAction, setPickerAction] = useState<PickerAction>(null);
   const [error, setError] = useState("");
@@ -77,11 +79,13 @@ export default function CoconutDetectionScreen() {
       });
 
       if (!result.canceled) {
-        const selectedImage = result.assets[0]?.uri;
-        if (!selectedImage) {
+        const selectedAsset = result.assets[0];
+        if (!selectedAsset?.uri) {
           throw new Error("The selected photo could not be opened. Please try another image.");
         }
-        setImageUri(selectedImage);
+        setImageUri(selectedAsset.uri);
+        setImageName(selectedAsset.fileName || "");
+        setImageType(selectedAsset.mimeType || "");
         setCameraReady(false);
       }
     } catch (reason) {
@@ -100,6 +104,8 @@ export default function CoconutDetectionScreen() {
     if (actionInProgress.current) return;
     if (imageUri) {
       setImageUri(null);
+      setImageName("");
+      setImageType("");
       setError("");
       setCameraReady(false);
       return;
@@ -140,6 +146,8 @@ export default function CoconutDetectionScreen() {
         throw new Error("The camera did not return a photo. Please try again.");
       }
       setImageUri(captured.uri);
+      setImageName("");
+      setImageType("image/jpeg");
       setCameraReady(false);
     } catch (reason) {
       setError(
@@ -157,7 +165,13 @@ export default function CoconutDetectionScreen() {
     if (!imageUri || actionInProgress.current) return;
     router.push({
       pathname: "/harvest/results",
-      params: { imageUri, treeId: "C023", fromDetection: "true" },
+      params: {
+        imageUri,
+        imageName,
+        imageType,
+        treeId: "C023",
+        fromDetection: "true",
+      },
     });
   }
 
@@ -206,7 +220,7 @@ export default function CoconutDetectionScreen() {
 
         <View style={styles.treeRow}>
           <Text style={styles.treeLabel}>TREE C023</Text>
-          <Text style={styles.previewTag}>PREVIEW ONLY</Text>
+          <Text style={styles.previewTag}>AI ANALYSIS</Text>
         </View>
 
         <View
@@ -384,7 +398,7 @@ export default function CoconutDetectionScreen() {
         </Pressable>
 
         <Text style={styles.disclaimer}>
-          Photo selection and capture only. No coconut AI analysis is connected.
+          Your selected or captured photo is sent to the coconut AI for analysis.
         </Text>
       </ScrollView>
     </SafeAreaView>
