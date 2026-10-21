@@ -279,9 +279,9 @@ Additional prediction models and decision rules are developed for the other rese
 _Group member names, student IDs and details._
 
 - A.I.A Nimalasuriya, IT23234048
-- H Kuruppuge, IT**\*\***
-- Gunasekara, **\*\***
-- Sandeepa, **\*\***
+- H Kuruppuge, IT23200906
+- H.A.K.M Gunasekara, IT23237490
+- M.S Subashini, IT23237018
 
 ## 14. License
 
