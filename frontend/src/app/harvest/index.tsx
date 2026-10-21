@@ -146,6 +146,8 @@ export default function HarvestDashboard() {
               onPress={() =>
                 label === "Analyze Image"
                   ? router.push("/harvest/detection")
+                  : label === "Factors & Insights"
+                    ? router.push("/harvest/insights")
                   : showPreviewMessage(label)
               }
               style={styles.action}
