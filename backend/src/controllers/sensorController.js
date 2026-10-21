@@ -1,4 +1,3 @@
-
 import {
   insertSensorReading,
   getLatestReading,
@@ -19,10 +18,7 @@ const numericFields = [
 ];
 
 function validDeviceId(id) {
-  return (
-    typeof id === "string" &&
-    /^[a-zA-Z0-9_-]{1,50}$/.test(id)
-  );
+  return typeof id === "string" && /^[a-zA-Z0-9_-]{1,50}$/.test(id);
 }
 
 // ESP32 sends sensor readings
@@ -43,10 +39,7 @@ export async function saveSensorData(req, res) {
       if (
         value !== null &&
         value !== undefined &&
-        (
-          typeof value !== "number" ||
-          !Number.isFinite(value)
-        )
+        (typeof value !== "number" || !Number.isFinite(value))
       ) {
         return res.status(400).json({
           success: false,
@@ -85,9 +78,7 @@ export async function saveSensorData(req, res) {
 
     const readingId = await insertSensorReading(cleanData);
 
-    console.log(
-      `✅ Saved sensor reading ${readingId} from ${data.deviceId}`
-    );
+    console.log(`Saved sensor reading ${readingId} from ${data.deviceId}`);
 
     return res.status(201).json({
       success: true,
@@ -153,10 +144,7 @@ export async function sensorHistory(req, res) {
 
     const limit = req.query.limit || 100;
 
-    const readings = await getReadingHistory(
-      deviceId,
-      limit
-    );
+    const readings = await getReadingHistory(deviceId, limit);
 
     return res.json({
       success: true,
