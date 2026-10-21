@@ -162,7 +162,7 @@ J26-IT-313/
 ### Clone Repository
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone https://github.com/isukanimalasuriya/J26-IT-313
 cd J26-IT-313
 ```
 
