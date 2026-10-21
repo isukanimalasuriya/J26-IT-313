@@ -276,7 +276,12 @@ Additional prediction models and decision rules are developed for the other rese
 **Institution:** Sri Lanka Institute of Information Technology (SLIIT)  
 **Project Type:** Final Year Research Project
 
-_Add group member names, student IDs, responsibilities, and supervisor details here._
+_Group member names, student IDs and details._
+
+- A.I.A Nimalasuriya, IT23234048
+- H Kuruppuge, IT**\*\***
+- Gunasekara, **\*\***
+- Sandeepa, **\*\***
 
 ## 14. License
 
