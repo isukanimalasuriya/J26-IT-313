@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import os
 from pathlib import Path
 from typing import Annotated
@@ -14,6 +15,8 @@ from PIL import Image, UnidentifiedImageError
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "trained_models" / "disease" / "mobilenetv2_100 (2).onnx"
+SEVERITY_MODEL_PATH = BASE_DIR / "trained_models" / "severity" / "wclwd_stage.onnx"
+SEVERITY_CONFIG_PATH = BASE_DIR / "trained_models" / "severity" / "severity_config.json"
 DEFAULT_LABELS = ("WCLWD", "gray_spot", "healthy", "whitefly")
 LABELS = tuple(
     label.strip()
@@ -23,11 +26,20 @@ LABELS = tuple(
 
 if not MODEL_PATH.is_file():
     raise RuntimeError(f"Disease model not found: {MODEL_PATH}")
+if not SEVERITY_MODEL_PATH.is_file():
+    raise RuntimeError(f"Severity model not found: {SEVERITY_MODEL_PATH}")
+if not SEVERITY_CONFIG_PATH.is_file():
+    raise RuntimeError(f"Severity config not found: {SEVERITY_CONFIG_PATH}")
 if len(LABELS) != 4:
     raise RuntimeError("DISEASE_LABELS must contain exactly four comma-separated labels")
 
 session = ort.InferenceSession(str(MODEL_PATH), providers=["CPUExecutionProvider"])
 input_name = session.get_inputs()[0].name
+severity_config = json.loads(SEVERITY_CONFIG_PATH.read_text(encoding="utf-8"))
+severity_stages = tuple(severity_config["stages"])
+severity_stage_text = severity_config["stage_text"]
+severity_session = ort.InferenceSession(str(SEVERITY_MODEL_PATH), providers=["CPUExecutionProvider"])
+severity_input_name = severity_session.get_inputs()[0].name
 
 app = FastAPI(title="Coconut Disease Prediction API")
 app.add_middleware(
@@ -64,6 +76,24 @@ def predict(image: np.ndarray) -> list[dict[str, float | str]]:
     ]
 
 
+def predict_severity(image: np.ndarray) -> dict[str, float | str]:
+    logits = np.asarray(
+        severity_session.run(None, {severity_input_name: image})[0][0],
+        dtype=np.float32,
+    )
+    logits -= np.max(logits)
+    probabilities = np.exp(logits)
+    probabilities /= np.sum(probabilities)
+    stage_index = int(np.argmax(probabilities))
+    confidence = round(float(probabilities[stage_index]), 6)
+    stage = severity_stages[stage_index]
+    return {
+        "stage": stage,
+        "label": severity_stage_text[stage],
+        "confidence": confidence,
+    }
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "online", "model": MODEL_PATH.name}
@@ -78,8 +108,12 @@ async def predict_disease(file: Annotated[UploadFile, File(...)]) -> dict[str, o
     if not contents:
         raise HTTPException(status_code=400, detail="The uploaded image is empty.")
 
-    predictions = predict(preprocess_image(contents))
-    return {
+    image = preprocess_image(contents)
+    predictions = predict(image)
+    response: dict[str, object] = {
         "disease": predictions[0]["label"],
         "confidence": predictions[0]["confidence"],
     }
+    if predictions[0]["label"].strip().lower() != "healthy":
+        response["severity"] = predict_severity(image)
+    return response

@@ -1,0 +1,60 @@
+{
+  "stages": [
+    "Flaccidity",
+    "Yellowing",
+    "Drying"
+  ],
+  "stage_text": {
+    "Flaccidity": "Early stage",
+    "Yellowing": "Moderate stage",
+    "Drying": "Severe stage"
+  },
+  "img_size": 224,
+  "conf_min": 0.6,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "green_low": [
+    35,
+    40,
+    40
+  ],
+  "green_high": [
+    90,
+    255,
+    255
+  ],
+  "white_bg": [
+    [
+      0,
+      0,
+      200
+    ],
+    [
+      179,
+      30,
+      255
+    ]
+  ],
+  "dark_bg": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      179,
+      255,
+      30
+    ]
+  ],
+  "low_t": 10,
+  "high_t": 30
+}

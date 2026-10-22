@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import apiRouter from './routes/index.js';
@@ -97,15 +97,18 @@ function startFastApi() {
 }
 
 function stopFastApi() {
-  if (fastApiProcess && !fastApiProcess.killed) {
-    fastApiProcess.kill();
+  if (fastApiProcess && fastApiProcess.pid && !fastApiProcess.killed) {
+    // /T kills the whole process tree, /F forces it (Windows)
+    spawnSync('taskkill', ['/pid', String(fastApiProcess.pid), '/T', '/F'], {
+      stdio: 'ignore',
+    });
   }
 }
 
 startFastApi();
 
-// Start server
-app.listen(PORT, "0.0.0.0", async () => {
+// Start server (keep a reference so we can close it)
+const server = app.listen(PORT, "0.0.0.0", async () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);
   console.log(`Local network URL: http://10.67.165.135:${PORT}`);
   console.log(`Sensor endpoint: http://10.67.165.135:${PORT}/api/sensors`);
@@ -115,8 +118,18 @@ app.listen(PORT, "0.0.0.0", async () => {
   console.log(`Database status:`, dbStatus);
 });
 
-process.on('SIGINT', stopFastApi);
-process.on('SIGTERM', stopFastApi);
-process.on('exit', stopFastApi);
+let shuttingDown = false;
+function shutdown() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log('Shutting down...');
+  stopFastApi();
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 2000).unref(); // force exit if connections linger
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+process.on('SIGBREAK', shutdown); // Windows: closing the terminal / Ctrl+Break
 
 export default app;

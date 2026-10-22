@@ -8,6 +8,10 @@ import * as ImagePicker from "expo-image-picker";
 type DiseaseResponse = {
   disease: string;
   confidence: number;
+  severity?: {
+    label: string;
+  
+  };
 };
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? Platform.select({
@@ -107,6 +111,13 @@ export default function PredictionScreen() {
             <Text style={styles.resultEyebrow}>MODEL OUTPUT</Text>
             <Text style={styles.resultTitle}>{formatLabel(prediction.disease)}</Text>
             <Text style={styles.confidence}>{Math.round(prediction.confidence * 100)}% confidence</Text>
+            {prediction.severity && (
+              <View style={styles.severityBlock}>
+                <Text style={styles.severityEyebrow}>SEVERITY</Text>
+                <Text style={styles.severityTitle}>{prediction.severity.label}</Text>
+
+              </View>
+            )}
             <Text style={styles.disclaimer}>
               This result is an AI estimate and should be confirmed by an agricultural expert.
             </Text>
@@ -178,5 +189,16 @@ const styles = StyleSheet.create({
   resultEyebrow: { color: "#168B46", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   resultTitle: { color: "#183322", fontSize: 24, fontWeight: "700", marginTop: 8 },
   confidence: { color: "#168B46", fontSize: 15, fontWeight: "700", marginTop: 6 },
+  severityBlock: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#C6E4CF",
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 16,
+    padding: 14,
+  },
+  severityEyebrow: { color: "#168B46", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
+  severityTitle: { color: "#183322", fontSize: 18, fontWeight: "700", marginTop: 5 },
+  severityStage: { color: "#637268", fontSize: 13, marginTop: 4 },
   disclaimer: { color: "#637268", fontSize: 12, lineHeight: 18, marginTop: 16 },
 });
