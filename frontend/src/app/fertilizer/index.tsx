@@ -178,13 +178,13 @@ export default function FertilizerScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`${zone.name}, ${zone.slope}, ${zone.trees} trees, ${zone.status}, soil moisture ${zone.moisture} percent. View details.`}
                 onPress={() =>
-  router.push({
-    pathname: "/fertilizer/[zoneId]",
-    params: {
-      zoneId: zone.id,
-    },
-  })
-}
+                  router.push({
+                    pathname: "/fertilizer/[zoneId]",
+                    params: {
+                      zoneId: zone.id,
+                    },
+                  })
+                }
                 style={({ pressed }) => [
                   styles.zoneCard,
                   pressed && styles.pressed,
