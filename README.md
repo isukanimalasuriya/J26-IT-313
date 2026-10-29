@@ -54,14 +54,17 @@ Develops a slope-aware, crop-profile-based fertilizer recommendation framework.
 
 ### Component 2: Coconut Disease Detection
 
-Focuses on identifying coconut diseases using image-based AI analysis.
+Focuses on identifying coconut diseases and assessing their severity using image-based AI analysis.
 
 **Planned Features:**
 
-- Image-based disease identification.
-- AI-assisted disease classification.
-- Disease information and management guidance.
-- Mobile application integration.
+- Image-based coconut disease identification using MobileNetV2 and EfficientNet-Lite.
+- Comparative evaluation of MobileNetV2 and EfficientNet-Lite for disease identification.
+- Disease severity classification into three levels: Early, Moderate, and Severe.
+- Identification of multiple coconut diseases, including Weligama Coconut Leaf Wilt Disease (WCLWD).
+- Disease information and management guidance based on the identified disease and severity level.
+- Mobile application integration for image uploading and displaying disease identification results, severity levels, and recommended management actions.
+- Disease progress monitoring through follow-up images to assess whether the condition is Improving, Stable, or Deteriorating.
 
 ### Component 3: Coconut Maturity and Harvest Prediction
 
@@ -230,47 +233,33 @@ Sensor readings are sent to the backend using HTTP requests.
 
 ## 10. Machine Learning Approach
 
-The fertilizer recommendation component uses machine learning to estimate fertilizer application quantities based on soil, environmental, and coconut tree parameters.
+- **Component 1 – Fertilizer Recommendation:** XGBoost for fertilizer dosage prediction and slope risk analysis.
+- **Component 2 – Coconut Disease Detection:** MobileNetV2 and EfficientNet-Lite for disease identification and severity classification.
+- **Component 3 – Maturity and Harvest Prediction:** YOLOv8 and EfficientNet-Lite are compared to evaluate their performance in coconut maturity identification and classification.
+- **Component 4 – Financial Planning:** XGBoost for financial model development and risk assessment.
 
-**Potential Input Parameters:**
-
-- Soil N, P, K
-- Soil pH
-- Soil Moisture
-- Soil Salinity
-- Organic Matter
-- Coconut Tree Age
-- Coconut Variety
-- Soil Texture
-
-Rainfall and slope information are additionally considered when deciding fertilizer application timing, methods, and nutrient-loss risks.
-
-**Algorithm:** XGBoost Regression for fertilizer dosage prediction.
-
-Additional prediction models and decision rules are developed for the other research components.
-
-## 11. Current Project Status
+## 11. Current Project Status — PP1
 
 **Research and Development Stage — PP1**
 
-- Research scope and objectives defined.
-- Mobile application structure initialized.
-- Backend API development initiated.
-- MySQL and Firebase integrations developed.
-- ESP32 sensor integration under testing.
-- Preliminary fertilizer prediction model developed.
-- Research component development ongoing.
+**Component 1: Smart Fertilizer Recommendation and Resource Management**
+- Completed ESP32-based soil sensor integration.
+- Implemented soil sensor data collection and transmission to the backend.
+- Implemented storage of sensor readings in the database.
 
-## 12. Future Improvements
+**Component 2: Coconut Disease Detection**
+- Implemented coconut disease identification using MobileNetV2 and EfficientNet-Lite.
+- Implemented disease severity classification into Early, Moderate, and Severe levels.
 
-- Complete model validation using field-collected datasets.
-- Improve fertilizer recommendations using agricultural expert feedback.
-- Implement weather-based fertilizer scheduling.
-- Complete integration of all four research components.
-- Perform system testing and usability evaluation.
-- Deploy backend and database services.
+**Component 3: Coconut Maturity and Harvest Prediction**
+- Implemented coconut maturity identification and classification.
+- Developed YOLOv8 and EfficientNet-Lite models for performance comparison.
 
-## 13. Research Team
+**Component 4: Financial Planning and Risk Management**
+- Completed initial training of the XGBoost financial model.
+- Developed the initial model to support financial planning and risk assessment.
+
+## 12. Research Team
 
 **Group ID:** J26-IT-313  
 **Institution:** Sri Lanka Institute of Information Technology (SLIIT)  
