@@ -272,6 +272,6 @@ _Group member names, student IDs and details._
 - H.A.K.M Gunasekara, IT23237490
 - M.S Subashini, IT23237018
 
-## 14. License
+## 13. License
 
 This repository is intended for academic research and educational purposes. Usage and distribution are subject to the project team's selected license.
