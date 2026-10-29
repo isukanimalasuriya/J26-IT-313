@@ -6,6 +6,8 @@ import { useColorScheme, View, StyleSheet } from "react-native";
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import BottomNav from "@/components/BottomNav";
 
+import { FinanceProvider } from "@/context/FinanceContext";
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -13,19 +15,21 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
+      <FinanceProvider>
+        <AnimatedSplashOverlay />
 
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-            }}
-          />
+        <View style={styles.container}>
+          <View style={styles.content}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            />
+          </View>
+
+          <BottomNav />
         </View>
-
-        <BottomNav />
-      </View>
+      </FinanceProvider>
     </ThemeProvider>
   );
 }
