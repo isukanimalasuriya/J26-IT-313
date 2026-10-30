@@ -1,277 +1,228 @@
-# Smart Coconut Cultivation Management System
+# Coconut Disease Identification & Severity Classification
 
-### Final Year Research Project — J26-IT-313
+**Project:** AI-Powered IoT Based Smart Resources Management Framework For Coconut Cultivation   
+**Project ID:** J26-IT-313
+**Student ID:** IT23200906
+**University:** Sri Lanka Institute of Information Technology (SLIIT)
 
-**Sri Lanka Institute of Information Technology (SLIIT)**
+## 1. Overview
 
-## 1. Project Overview
+This component focuses on developing an AI-based Coconut Disease Identification and Severity Classification system to help Sri Lankan coconut farmers identify coconut diseases using leaf images.
 
-The Smart Coconut Cultivation Management System is an IoT and AI-based research project designed to support coconut farmers in making data-driven cultivation decisions.
+The system uses deep learning-based image classification to identify different coconut diseases and determines disease severity using three levels: Early, Moderate, and Severe.
 
-The system combines real-time soil monitoring, machine learning, environmental analysis, and mobile technologies to improve fertilizer management, disease identification, harvesting decisions, and financial planning.
+It also provides disease-specific treatment recommendations and supports disease progress monitoring by comparing previous and current assessments.
 
-The proposed solution consists of four major research components:
+## 2. Main Features
 
-1. Smart Fertilizer Recommendation and Resource Management
-2. Coconut Disease Detection
-3. Coconut Maturity and Harvest Prediction
-4. Financial Planning and Risk Management
+- **Disease Identification:** Identifies coconut diseases from uploaded or captured images using AI-based image classification.
+- **Multiple Disease Classification:** Identifies different coconut disease categories.
+- **Model Comparison:** Evaluates MobileNetV2 and EfficientNet-Lite to identify a suitable lightweight CNN model.
+- **Severity Classification:** Categorizes disease severity into Early, Moderate, and Severe stages.
+- **Treatment Recommendations:** Provides disease-specific treatment recommendations using a rule-based approach.
+- **Progress Monitoring:** Compares previous and current assessments to identify whether the disease condition is Improving, Stable, or Deteriorating.
+- **Mobile Integration:** Provides disease identification functionality through a React Native mobile application.
 
-## 2. Research Problem
+## 3. Machine Learning Models
 
-Traditional coconut cultivation faces challenges such as inefficient fertilizer application, nutrient losses caused by rainfall and sloping terrain, delayed disease detection, uncertain harvesting decisions, and limited access to data-driven financial planning.
+The following lightweight CNN architectures are used for comparative evaluation:
 
-This research aims to address these challenges through an integrated smart cultivation system.
+| Model | Purpose |
+|---|---|
+| MobileNetV2 | Coconut disease identification |
+| EfficientNet-Lite | Coconut disease identification |
 
-## 3. Research Objectives
+The models are evaluated using accuracy, precision, recall, F1-score, confusion matrix, and inference time.
 
-- Develop an intelligent fertilizer recommendation system using soil and crop parameters.
-- Analyze rainfall, slope, and nutrient-loss risks.
-- Integrate IoT sensors for real-time environmental monitoring.
-- Develop an AI-based coconut disease detection component.
-- Support coconut maturity and harvesting predictions.
-- Provide financial planning and risk assessment capabilities.
-- Develop a mobile application for accessing cultivation recommendations.
+## 4. Technology Stack
 
-## 4. Research Components
+| Technology | Purpose |
+|---|---|
+| Python | Machine Learning Development |
+| PyTorch | Model Training |
+| timm | Pre-trained Model Architectures |
+| NumPy | Numerical Processing |
+| OpenCV | Image Processing |
+| Scikit-learn | Model Evaluation |
+| ONNX | Model Export |
+| ONNX Runtime | Model Inference |
+| FastAPI | ML Processing API (if used) |
+| Node.js | Backend Development |
+| Express.js | REST API Development |
+| React Native | Mobile Application |
+| Expo | Mobile Application Development |
 
-### Component 1: Smart Fertilizer Recommendation and Resource Management
+## 5. Project Structure
 
-Develops a slope-aware, crop-profile-based fertilizer recommendation framework.
-
-**Key Features:**
-
-- Real-time soil parameter monitoring using ESP32 and sensors.
-- Soil pH, NPK, moisture, and environmental measurements.
-- Coconut variety and tree-age-based recommendations.
-- Machine learning-based fertilizer dosage prediction.
-- Rainfall forecast integration.
-- Slope-based nutrient-loss risk analysis.
-- Fertilizer application timing and split-dose recommendations.
-- Post-application nutrient retention monitoring.
-
-**Technologies:** ESP32, Python, XGBoost, Node.js, MySQL, Firebase.
-
-### Component 2: Coconut Disease Detection
-
-Focuses on identifying coconut diseases and assessing their severity using image-based AI analysis.
-
-**Planned Features:**
-
-- Image-based coconut disease identification using MobileNetV2 and EfficientNet-Lite.
-- Comparative evaluation of MobileNetV2 and EfficientNet-Lite for disease identification.
-- Disease severity classification into three levels: Early, Moderate, and Severe.
-- Identification of multiple coconut diseases, including Weligama Coconut Leaf Wilt Disease (WCLWD).
-- Disease information and management guidance based on the identified disease and severity level.
-- Mobile application integration for image uploading and displaying disease identification results, severity levels, and recommended management actions.
-- Disease progress monitoring through follow-up images to assess whether the condition is Improving, Stable, or Deteriorating.
-
-### Component 3: Coconut Maturity and Harvest Prediction
-
-Focuses on supporting harvesting decisions through predictive analysis.
-
-**Planned Features:**
-
-- Coconut maturity assessment.
-- Harvest readiness prediction.
-- Data-driven harvesting recommendations.
-
-### Component 4: Financial Planning and Risk Management
-
-Focuses on improving plantation financial management.
-
-**Planned Features:**
-
-- Cultivation cost analysis.
-- Financial planning assistance.
-- Risk assessment.
-- Decision support for farmers.
-
-## 5. Technology Stack
-
-| Layer               | Technologies                      |
-| ------------------- | --------------------------------- |
-| Mobile Application  | React Native, Expo                |
-| Backend API         | Node.js, Express.js               |
-| Machine Learning    | Python, Scikit-learn, XGBoost     |
-| Relational Database | MySQL                             |
-| Sensor Data Storage | Firebase Firestore                |
-| IoT Hardware        | ESP32                             |
-| Communication       | Wi-Fi, HTTP REST API              |
-| Development Tools   | VS Code, Arduino IDE, Git, GitHub |
-
-## 6. System Architecture
-
-The proposed solution connects field sensors to the mobile application through backend services.
-
-**Data Flow:**
-
-ESP32 + Soil Sensors  
-↓  
-Wi-Fi Communication  
-↓  
-Node.js / Express Backend  
-↓  
-MySQL Database + Firebase Firestore  
-↓  
-Python Machine Learning Processing  
-↓  
-Fertilizer Recommendations and Risk Analysis  
-↓  
-React Native Mobile Application
-
-Other research components integrate through the shared application and backend services.
-
-## 7. Project Folder Structure
+The disease identification functionality is integrated into the following project structure:
 
 ```text
 J26-IT-313/
-|
-|-- backend/
-|   |-- app/
-|   |-- processing/
-|   |   |-- __init__.py
-|   |   |-- inference_runner.py
-|   |-- src/
-|   |-- trained_models/
-|   |-- .env.example
-|   |-- package.json
-|   |-- requirements.txt
-|   |-- README.md
-|
-|-- frontend/
-|   |-- assets/
-|   |-- scripts/
-|   |-- src/
-|   |-- package.json
-|   |-- app.json
-|   |-- README.md
-|
-|-- .gitignore
-|-- README.md
+│
+├── backend/
+│   ├── processing/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── server.js
+│   ├── trained_models/
+│   ├── requirements.txt
+│   ├── package.json
+│   └── .env.example
+│
+├── frontend/
+│   ├── app/
+│   │   ├── disease/
+│   │   │   ├── index.tsx
+│   │   │   └── prediction.tsx
+│   │   ├── fertilizer/
+│   │   ├── finance/
+│   │   ├── harvest/
+│   │   └── _layout.tsx
+│   │
+│   ├── components/
+│   ├── assets/
+│   ├── package.json
+│   └── app.json
+│
+└── README.md
 ```
 
-## 8. Installation and Setup
+## 6. Installation and Setup
 
 ### Prerequisites
 
 - Node.js and npm
-- Python 3.11 or a compatible version
-- MySQL Server
-- Expo Go or an Android emulator
-- Arduino IDE for ESP32 development
-- Firebase project credentials
+- Python 3.11
+- Git
+- Visual Studio Code
+- Expo Go (for mobile testing)
 
-### Clone Repository
+### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/isukanimalasuriya/J26-IT-313
+git clone https://github.com/isukanimalasuriya/J26-IT-313.git
+```
+
+Navigate to the project directory:
+
+```bash
 cd J26-IT-313
 ```
 
-### Backend Setup
+### Step 2: Backend Setup
+
+Navigate to the backend directory:
 
 ```bash
 cd backend
+```
+
+Install Node.js dependencies:
+
+```bash
 npm install
 ```
 
-Create a `.env` file using `.env.example` and configure the required environment variables.
+Configure the environment variables using `.env.example` and create your `.env` file.
 
-Start the backend:
+Start the backend server:
 
 ```bash
 npm start
 ```
 
-### Python Machine Learning Setup
+### Step 3: Frontend Setup
 
-From the backend directory:
-
-```bash
-python -m venv .venv311
-```
-
-Activate the virtual environment on Windows:
+Open another terminal and navigate to the frontend directory:
 
 ```bash
-.venv311\Scripts\activate
+cd J26-IT-313/frontend
 ```
 
-Install the Python dependencies:
+Install frontend dependencies:
+
+```bash
+npm install
+```
+
+Start the Expo development server:
+
+```bash
+npx expo start
+```
+
+Scan the QR code using Expo Go or run the application using an available emulator.
+
+### Step 4: Python Dependencies
+
+If the disease identification processing module requires Python dependencies, navigate to the backend directory and install them:
+
+```bash
+cd backend
+```
+
+Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+Windows activation:
+
+```bash
+.venv\Scripts\activate
+```
+
+Install Python dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Frontend Setup
+## 7. Disease Identification Workflow
 
-From the repository root:
+1. Farmer opens the disease identification module in the mobile application.
+2. Farmer captures or uploads a coconut leaf image.
+3. The image is sent to the backend through a REST API.
+4. The image is processed and passed to the trained deep learning model.
+5. The model predicts the coconut disease category.
+6. The system determines the disease severity level.
+7. Disease identification results and treatment recommendations are returned to the mobile application.
+8. Farmers can submit follow-up images to monitor disease progression.
 
-```bash
-cd frontend
-npm install
-npx expo start
-```
+## 8. Model Evaluation Metrics
 
-Use Expo Go or an emulator to access the mobile application.
+The following metrics are used to evaluate and compare the trained models:
 
-## 9. IoT Sensor Integration
+- Accuracy
+- Precision
+- Recall
+- F1-Score
+- Confusion Matrix
+- Inference Time
 
-The fertilizer management component uses an ESP32-based monitoring setup.
+The comparative evaluation helps identify a suitable lightweight model for integration into the mobile application.
 
-**Sensors:**
+## 9. Research Contribution
 
-- RS485 Soil NPK Sensor
-- Soil Moisture Sensor
-- Soil pH Sensor
-- DHT22 Temperature and Humidity Sensor
-- DS18B20 Soil Temperature Sensor
-- MPU6050 / MPU9250 Slope Measurement Sensor
+This component contributes to the Smart Coconut Cultivation Management System by:
 
-Sensor readings are sent to the backend using HTTP requests.
+- Developing an AI-based coconut disease identification solution.
+- Supporting early identification of coconut diseases.
+- Classifying disease severity into three stages.
+- Comparing lightweight CNN architectures.
+- Providing disease-specific treatment recommendations.
+- Monitoring disease progression over time.
+- Supporting Sri Lankan coconut farmers through mobile-based AI technology.
 
-## 10. Machine Learning Approach
+## 10. Project Information
 
-- **Component 1 – Fertilizer Recommendation:** XGBoost for fertilizer dosage prediction.
-- **Component 2 – Coconut Disease Detection:** MobileNetV2 and EfficientNet-Lite for disease identification and severity classification.
-- **Component 3 – Maturity and Harvest Prediction:** YOLOv8 and EfficientNet-Lite are compared to evaluate their performance in coconut maturity identification and classification.
-- **Component 4 – Financial Planning:** XGBoost for financial model development and risk assessment.
-
-## 11. Current Project Status — PP1
-
-**Research and Development Stage — PP1**
-
-**Component 1: Smart Fertilizer Recommendation and Resource Management**
-- Completed ESP32-based soil sensor integration.
-- Implemented soil sensor data collection and transmission to the backend.
-- Implemented storage of sensor readings in the database.
-
-**Component 2: Coconut Disease Detection**
-- Implemented coconut disease identification using MobileNetV2 and EfficientNet-Lite.
-- Implemented disease severity classification into Early, Moderate, and Severe levels.
-
-**Component 3: Coconut Maturity and Harvest Prediction**
-- Implemented coconut maturity identification and classification.
-- Developed YOLOv8 and EfficientNet-Lite models for performance comparison.
-
-**Component 4: Financial Planning and Risk Management**
-- Completed initial training of the XGBoost financial model.
-- Developed the initial model to support financial planning and risk assessment.
-
-## 12. Research Team
-
-**Group ID:** J26-IT-313  
-**Institution:** Sri Lanka Institute of Information Technology (SLIIT)  
-**Project Type:** Final Year Research Project
-
-_Group member names, student IDs and details._
-
-- A.I.A Nimalasuriya, IT23234048
-- H Kuruppuge, IT23200906
-- H.A.K.M Gunasekara, IT23237490
-- M.S Subashini, IT23237018
-
-## 13. License
-
-This repository is intended for academic research and educational purposes. Usage and distribution are subject to the project team's selected license.
+**Project Name:** AI-Powered IoT Based Smart Resources Management Framework For Coconut Cultivation 
+**Component:** Coconut Disease Identification & Severity Classification  
+**Project ID:** J26-IT-313  
+**Student ID:** IT23200906  
+**Institution:** Sri Lanka Institute of Information Technology (SLIIT)
